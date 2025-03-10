@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  //baseURL: process.env.REACT_APP_API_URL || 'https://tickets-backend-production.up.railway.app/api', //backend propio
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api', //backend propio
+  baseURL: process.env.REACT_APP_API_URL || 'https://tickets-backend-production.up.railway.app/api', //backend propio
+  //baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api', //backend propio
 });
 
 // Variable global para almacenar la función de logout
