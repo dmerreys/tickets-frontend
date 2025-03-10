@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, VStack, Text, Heading } from '@chakra-ui/react';
 import api from '../services/api';
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, logoutMessage }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,7 +12,7 @@ const Login = ({ onLogin }) => {
     try {
       const response = await api.post('/auth/login', { email, password });
       console.log('Respuesta de login:', response.data);
-      onLogin(response.data.token, response.data.user); // Pasamos token y user
+      onLogin(response.data.token, response.data.user); // Paso token y user
     } catch (err) {
       console.error('Error en login:', err.response?.data?.msg || err.message);
       setError(err.response?.data?.msg || 'Error al iniciar sesión');
@@ -25,15 +25,16 @@ const Login = ({ onLogin }) => {
       mx="auto"
       mt={10}
       p={6}
-      bg="background" // Fondo personalizado del tema
+      bg="background"
       borderWidth={1}
       borderRadius="md"
       boxShadow="lg"
-      borderColor="grayLight" // Borde gris claro
+      borderColor="grayLight"
     >
       <Heading mb={6} textAlign="center" color="primary">
         Iniciar Sesión
       </Heading>
+      {logoutMessage && <Text color="slaBreached" mb={4} textAlign="center">{logoutMessage}</Text>}
       <form onSubmit={handleSubmit}>
         <VStack spacing={4}>
           <FormControl id="email" isRequired>

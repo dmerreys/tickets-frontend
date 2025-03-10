@@ -27,13 +27,14 @@ const TicketModal = ({ ticket, onSave, onClose, services, isCreating, user }) =>
     createdBy: ticket.createdBy || user?._id || '',
     email: ticket.email || user?.email || '',
     relatedTickets: ticket.relatedTickets || [],
+    status: ticket.status || 'abierto',
   });
   const [activeTab, setActiveTab] = useState(0);
   const [worklog, setWorklog] = useState({ type: '', timeSpent: '', workDate: '', contact: '', solution: '', cause: '', resolution: '' });
   const [relatedTicketId, setRelatedTicketId] = useState('');
   const [relatedTicketsDetails, setRelatedTicketsDetails] = useState([]);
   const [error, setError] = useState(null);
-  const [creatorName, setCreatorName] = useState(user?.name || 'Desconocido'); // Nombre del creador
+  const [creatorName, setCreatorName] = useState(user?.name || 'Desconocido');
 
   useEffect(() => {
     const fetchCreatorName = async () => {
@@ -74,6 +75,7 @@ const TicketModal = ({ ticket, onSave, onClose, services, isCreating, user }) =>
         system: '',
         closeCode: '',
         relatedTickets: [],
+        status: 'abierto',
       });
     } else {
       setFormData({
@@ -81,6 +83,7 @@ const TicketModal = ({ ticket, onSave, onClose, services, isCreating, user }) =>
         createdBy: ticket.createdBy?._id || ticket.createdBy || user?._id || '',
         email: ticket.email || user?.email || '',
         relatedTickets: ticket.relatedTickets || [],
+        status: ticket.status || 'abierto',
       });
       fetchRelatedTickets(ticket.relatedTickets || []);
     }
@@ -129,15 +132,29 @@ const TicketModal = ({ ticket, onSave, onClose, services, isCreating, user }) =>
     console.log('Guardando ticket con datos:', formData);
     setError(null);
     try {
+      let updatedTicket;
       if (isCreating) {
-        await onSave(formData);
+        updatedTicket = await api.post('/tickets', formData);
+        onSave(updatedTicket.data, true);
       } else if (activeTab === 1 && worklog.type) {
-        const response = await api.post(`/tickets/${formData._id}/worklog`, worklog);
-        onSave(response.data);
+        const worklogResponse = await api.post(`/tickets/${formData._id}/worklog`, worklog);
+        updatedTicket = worklogResponse.data;
+
+        // Actualizar estado según el tipo de worklog
+        if (worklog.type === 'Resuelto' || worklog.type === 'Cerrado') {
+          const newStatus = worklog.type === 'Resuelto' ? 'resuelto' : 'cerrado';
+          const updatedFormData = { ...formData, status: newStatus };
+          const statusResponse = await api.put(`/tickets/${formData._id}`, updatedFormData);
+          updatedTicket = statusResponse.data;
+        }
+
+        onSave(updatedTicket, false, true, worklog.type === 'Cerrado');
         setWorklog({ type: '', timeSpent: '', workDate: '', contact: '', solution: '', cause: '', resolution: '' });
       } else {
-        await onSave(formData);
+        updatedTicket = await api.put(`/tickets/${formData._id}`, formData);
+        onSave(updatedTicket.data, false, false, formData.status === 'cerrado');
       }
+      onClose();
     } catch (err) {
       const errorMsg = err.response?.data?.msg || err.message;
       console.error('Error al guardar ticket:', errorMsg);
@@ -248,7 +265,12 @@ const TicketModal = ({ ticket, onSave, onClose, services, isCreating, user }) =>
                 <Text fontWeight="bold">Código de Cierre</Text>
                 <Input name="closeCode" value={formData.closeCode || ''} onChange={handleChange} placeholder="Código de Cierre" bg="grayLight" />
                 <Text fontWeight="bold">Estado</Text>
-                <Text>{formData.status || 'En cola'}</Text>
+                <Select name="status" value={formData.status} onChange={handleChange} bg="grayLight">
+                  <option value="abierto">Abierto</option>
+                  <option value="en progreso">En Progreso</option>
+                  <option value="resuelto">Resuelto</option>
+                  <option value="cerrado">Cerrado</option>
+                </Select>
                 <Text fontWeight="bold">Asignado a</Text>
                 <Text>{formData.assignedTo?.name || 'Sin asignar'}</Text>
                 <Text fontWeight="bold">Fecha de Creación</Text>
@@ -294,6 +316,7 @@ const TicketModal = ({ ticket, onSave, onClose, services, isCreating, user }) =>
                   <Select name="type" value={worklog.type} onChange={handleWorklogChange} bg="grayLight">
                     <option value="">Seleccionar Tipo</option>
                     <option value="Resuelto">Resuelto</option>
+                    <option value="Cerrado">Cerrado</option> 
                     <option value="Trabajo">Trabajo</option>
                     <option value="Primer Contacto">Primer Contacto</option>
                     <option value="Nota del Cliente">Nota del Cliente</option>

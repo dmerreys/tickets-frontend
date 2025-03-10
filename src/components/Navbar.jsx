@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Flex, Text, Button, Icon } from '@chakra-ui/react'; // Importamos los componentes necesarios
+import { Box, Flex, Text, Button, Icon } from '@chakra-ui/react'; 
 import { FaHome } from 'react-icons/fa';
 
 const Navbar = ({ onLogout, userName }) => {

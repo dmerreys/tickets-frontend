@@ -4,7 +4,7 @@ import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import App from './App';
 import './index.css';
 
-// Definir tema con paleta personalizada
+//paleta personalizada
 const theme = extendTheme({
   colors: {
     primary: '#655560',    // Morado oscuro

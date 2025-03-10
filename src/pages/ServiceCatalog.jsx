@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import TicketModal from '../components/TicketModal';
-import { Box, SimpleGrid, Text, Heading } from '@chakra-ui/react';
+import { Box, SimpleGrid, Text, Heading, useToast } from '@chakra-ui/react';
 
 const ServiceCatalog = ({ user }) => {
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/services');
+        const response = await api.get('/services'); 
         setServices(response.data || []);
       } catch (err) {
         console.error('Error al cargar servicios:', err.response?.data || err.message);
@@ -51,11 +52,27 @@ const ServiceCatalog = ({ user }) => {
     try {
       const response = await api.post('/tickets', ticketData);
       console.log('Ticket creado desde ServiceCatalog:', response.data);
+      toast({
+        title: 'Ticket creado',
+        description: `El ticket ${response.data.ticketId} se ha creado con éxito.`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+        position: 'top-right',
+      });
       setSelectedService(null);
     } catch (err) {
       const errorMsg = err.response?.data?.msg || err.message;
       console.error('Error al guardar ticket en ServiceCatalog:', errorMsg);
-      throw new Error(errorMsg); // Propagar el error al modal
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right',
+      });
+      throw new Error(errorMsg);
     }
   };
 
